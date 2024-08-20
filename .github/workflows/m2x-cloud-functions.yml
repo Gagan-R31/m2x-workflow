@@ -19,8 +19,8 @@ jobs:
 
       - name: Clone External Repository
         run: |
-          git clone https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com/revvco/m2x-nebula.git
-          cd your-external-repo
+          git clone --branch test-CICD https://$USERNAME_GITHUB:$TOKEN_GITHUB@github.com/revvco/m2x-nebula.git
+          cd m2x-nebula
     
       - name: Find changed folder and run script
         run: |
@@ -29,34 +29,34 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES"
           
-          # Extract unique directories in the cloud_functions folder
-          CHANGED_DIRS=$(echo "$CHANGED_FILES" | grep '^cloud_functions/' | cut -d '/' -f 2 | sort -u)
-          echo "Changed directories in cloud_functions:"
+          # Extract unique directories in the endpoint folder
+          CHANGED_DIRS=$(echo "$CHANGED_FILES" | grep '^endpoint/' | cut -d '/' -f 2 | sort -u)
+          echo "Changed directories in endpoint:"
           echo "$CHANGED_DIRS"
 
           if [ -z "$CHANGED_DIRS" ]; then
-            echo "No changes detected in any cloud_functions subdirectory."
+            echo "No changes detected in any endpoint subdirectory."
             exit 0
           fi
 
           for DIR in $CHANGED_DIRS; do
-            echo "Processing directory: cloud_functions/$DIR"
-            cd cloud_functions/$DIR
+            echo "Processing directory: endpoint/$DIR"
+            cd endpoint/$DIR
             
             # Log the command being used to install dependencies
             if [ -f "requirements.txt" ]; then
-              echo "Running: pip install -r requirements.txt in cloud_functions/$DIR"
+              echo "Running: pip install -r requirements.txt in endpoint/$DIR"
               pip install -r requirements.txt
             else
-              echo "No requirements.txt found in cloud_functions/$DIR"
+              echo "No requirements.txt found in endpoint/$DIR"
             fi
             
             # Log the command being used to run the script
-            if [ -f "main.py" ]; then
-              echo "Running: python main.py in cloud_functions/$DIR"
-              python main.py
+            if [ -f "deploy.sh" ]; then
+              echo "Running: deploy.sh in endpoint/$DIR"
+              bash deploy.sh
             else
-              echo "No main.py script found in cloud_functions/$DIR"
+              echo "No deploy.sh script found in endpoint/$DIR"
             fi
 
             cd -  # Return to the previous directory

@@ -19,7 +19,7 @@ jobs:
 
       - name: Clone External Repository
         run: |
-          git clone --branch test-CICD https://$USERNAME_GITHUB:$TOKEN_GITHUB@github.com/revvco/m2x-nebula.git
+          git clone --branch test-CICD https://$TOKEN_GITHUB@github.com/revvco/m2x-nebula.git
           cd m2x-nebula
     
       - name: Find changed folder and run script

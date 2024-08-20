@@ -1,0 +1,63 @@
+name: Manual Trigger Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # Fetch the last two commits to compare changes
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Clone External Repository
+        run: |
+          git clone https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com/revvco/m2x-nebula.git
+          cd your-external-repo
+    
+      - name: Find changed folder and run script
+        run: |
+          # Get a list of all changed files
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Extract unique directories in the cloud_functions folder
+          CHANGED_DIRS=$(echo "$CHANGED_FILES" | grep '^cloud_functions/' | cut -d '/' -f 2 | sort -u)
+          echo "Changed directories in cloud_functions:"
+          echo "$CHANGED_DIRS"
+
+          if [ -z "$CHANGED_DIRS" ]; then
+            echo "No changes detected in any cloud_functions subdirectory."
+            exit 0
+          fi
+
+          for DIR in $CHANGED_DIRS; do
+            echo "Processing directory: cloud_functions/$DIR"
+            cd cloud_functions/$DIR
+            
+            # Log the command being used to install dependencies
+            if [ -f "requirements.txt" ]; then
+              echo "Running: pip install -r requirements.txt in cloud_functions/$DIR"
+              pip install -r requirements.txt
+            else
+              echo "No requirements.txt found in cloud_functions/$DIR"
+            fi
+            
+            # Log the command being used to run the script
+            if [ -f "main.py" ]; then
+              echo "Running: python main.py in cloud_functions/$DIR"
+              python main.py
+            else
+              echo "No main.py script found in cloud_functions/$DIR"
+            fi
+
+            cd -  # Return to the previous directory
+          done
